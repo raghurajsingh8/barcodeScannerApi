@@ -3,52 +3,192 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- Corrected Bootstrap CSS link -->
+  <title>Advanced Barcode and QR Code Scanner</title>
+  
+  <!-- Bootstrap CSS -->
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
-  <!-- Corrected jQuery link -->
+  <!-- jQuery -->
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-  <!-- Corrected Bootstrap JS link -->
+  <!-- Bootstrap JS -->
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
-  <!-- Corrected Html5Qrcode link -->
+  <!-- Html5Qrcode for QR and Barcode Scanning -->
   <script src="https://unpkg.com/html5-qrcode@2.0.9/dist/html5-qrcode.min.js"></script>
-  <title>QR Code Scanner</title>
+
+  <!-- Custom CSS -->
   <style>
+    /* Background gradient and general body styling */
+    body {
+      background: linear-gradient(to bottom, #121212, #333);
+      color: #f5f5f5;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    /* Container styling */
+    .container {
+      max-width: 600px;
+      background-color: #1f1f1f;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+      text-align: center;
+    }
+
+    /* QR and barcode scanner box styling */
     .qr-reader-custom {
       width: 100%;
       max-width: 400px;
       height: auto;
+      margin: 10px auto;
+      padding: 10px;
+<!--       background-color: #333; -->
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
     }
+
+    /* Result display box */
     .result {
       margin-top: 20px;
-      padding: 10px;
-      border: 1px solid #ccc;
+      padding: 15px;
+      background-color: #252525;
+      color: #f5f5f5;
+      border: 1px solid #444;
       border-radius: 5px;
-      background-color: #f9f9f9;
+      text-align: center;
+      font-size: 1.1em;
     }
+
+    /* Brightness and Contrast Controls */
+    .controls {
+      margin-top: 20px;
+    }
+    
+    label {
+      display: inline-block;
+      margin: 5px 0;
+      color: #cccccc;
+    }
+
+    /* Custom range slider styling */
+    input[type="range"] {
+      width: 100%;
+      background: #444;
+      margin-bottom: 15px;
+      outline: none;
+      appearance: none;
+      border-radius: 5px;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      background-color: #4CAF50;
+      border-radius: 50%;
+      height: 15px;
+      width: 15px;
+      cursor: pointer;
+    }
+
+    input[type="range"]::-webkit-slider-runnable-track {
+      background-color: #666;
+      height: 5px;
+    }
+
+    /* Button styling */
+    .btn-custom {
+      margin: 10px 5px;
+      padding: 10px 20px;
+      background-color: #2196F3;
+      color: white;
+      font-weight: bold;
+      border: none;
+      border-radius: 5px;
+      font-size: 1em;
+      transition: background-color 0.3s ease;
+    }
+
+    .btn-custom:hover {
+      background-color: #1769aa;
+    }
+    
+    
   </style>
 </head>
 <body>
   <div class="container">
-    <div class="row">
-      <div class="col-sm-12">
-        <br>
-        <!-- Centered QR reader -->
-        <center><div id="qr-reader" class="qr-reader-custom"></div></center>
-        <!-- Result display section -->
-        <div id="result" class="result"></div>
-      </div>
+    <h2>Barcode & QR Code Scanner</h2>
+    <p>Scan both QR codes and barcodes with brightness and contrast adjustments.</p>
+
+    <!-- Centered QR reader -->
+    <div id="qr-reader" class="qr-reader-custom"></div>
+
+    <!-- Result display section -->
+    <div id="result" class="result">Scan Result Will Appear Here</div>
+
+    <!-- Brightness and Contrast Controls -->
+    <div class="controls">
+      <label for="brightness-slider">Brightness:</label>
+      <input type="range" id="brightness-slider" min="0.5" max="2" step="0.1" value="1">
+      <label for="contrast-slider">Contrast:</label>
+      <input type="range" id="contrast-slider" min="0.5" max="2" step="0.1" value="1">
     </div>
+
+    <!-- Camera Control Buttons -->
+    <button id="start-scanning" class="btn-custom">Start Scanning</button>
+    <button id="stop-scanning" class="btn-custom">Stop Scanning</button>
   </div>
+
   <script>
+    // Adjust video settings for brightness and contrast
+    function adjustVideoSettings(videoElement, brightness, contrast) {
+      videoElement.style.filter = `brightness(${brightness}) contrast(${contrast})`;
+    }
+
+    // Callback when a code is successfully scanned
     function onScanSuccess(decodedText, decodedResult) {
-      // Output the scanned code to the result div
       document.getElementById("result").innerText = `Scanned Code: ${decodedText}`;
       console.log(`Code scanned = ${decodedText}`, decodedResult);
     }
-    // Create an instance of Html5QrcodeScanner with options
-    var html5QrcodeScanner = new Html5QrcodeScanner(
-      "qr-reader", { fps: 10, qrbox: 250 });
-    html5QrcodeScanner.render(onScanSuccess);
+
+    // Create Html5QrcodeScanner instance with barcode support
+    const html5QrcodeScanner = new Html5QrcodeScanner("qr-reader", {
+      fps: 10,
+      qrbox: { width: 250, height: 250 },
+      formatsToSupport: [
+        Html5QrcodeSupportedFormats.QR_CODE,
+        Html5QrcodeSupportedFormats.CODE_128,
+        Html5QrcodeSupportedFormats.CODE_39,
+        Html5QrcodeSupportedFormats.EAN_13,
+        Html5QrcodeSupportedFormats.EAN_8,
+        Html5QrcodeSupportedFormats.UPC_A,
+        Html5QrcodeSupportedFormats.UPC_E
+      ]
+    });
+
+    // Start scanning on "Start Scanning" button click
+    document.getElementById("start-scanning").onclick = function () {
+      html5QrcodeScanner.render(onScanSuccess);
+    };
+
+    // Stop scanning on "Stop Scanning" button click
+    document.getElementById("stop-scanning").onclick = function () {
+      html5QrcodeScanner.clear().then(() => {
+        document.getElementById("result").innerText = "Scan Stopped";
+      }).catch(console.error);
+    };
+
+    // Adjust brightness and contrast sliders
+    document.getElementById("brightness-slider").addEventListener("input", function() {
+      const videoElement = document.querySelector("video");
+      adjustVideoSettings(videoElement, this.value, document.getElementById("contrast-slider").value);
+    });
+    document.getElementById("contrast-slider").addEventListener("input", function() {
+      const videoElement = document.querySelector("video");
+      adjustVideoSettings(videoElement, document.getElementById("brightness-slider").value, this.value);
+    });
   </script>
 </body>
 </html>
